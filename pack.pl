@@ -8,7 +8,7 @@ author( 'Andrew Dougherty', 'andrewdo@frdcsa.org' ).
 author( 'Douglas Miles', 'logicmoo@gmail.com' ).
 packager( 'TeamSPoon/LogicMoo', 'https://github.com/TeamSPoon/' ).
 home('https://github.com/TeamSPoon/logicmoo_webui').
-download('https://github.com/TeamSPoon/swish.git').
+download('https://github.com/TeamSPoon/logicmoo_webui.git').
 autoload(false).
 requires(logicmoo_utils).
 
