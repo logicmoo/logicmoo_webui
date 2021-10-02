@@ -1,11 +1,30 @@
-
 :- module(logicmoo_webui,[
    load_web_package_dirs/0,
    webui_load_swish_and_clio/0,
    webui_start_swish_and_clio/0]).
 
+/** <module> MODULE LOGICMOO WEBUI 
+This module starts and defines the web UI for LOGICMOO.  
+@author Douglas R. Miles
+@license LGPL
+*/
+
+:- discontiguous(lemur:'$exported_op'/3).
+:- discontiguous(phil:'$exported_op'/3).
+:- discontiguous(rdf11:'$exported_op'/3).
+
+:- multifile(prolog_version:git_update_versions/1).
+:- dynamic(prolog_version:git_update_versions/1).
+:- multifile(swish_version:git_update_versions/1).
+:- dynamic(swish_version:git_update_versions/1).
+
+:- if(use_module(library(logicmoo_utils))). :- endif.
+
+
+
 :- use_module(library(prolog_pack)).
 
+/*
 :- if( \+ current_prolog_flag(windows,true)).
  :- if( \+ exists_source(library(phil))).
   attach_linuxOnly_packs_web :- (working_directory(Dir,Dir);prolog_load_context(directory,Dir)),
@@ -17,47 +36,48 @@
 
  :- endif.
 :- endif.
+*/
 
 :- dynamic(lmconfig:logicmoo_webui_dir/1).
 
 :- lmconfig:logicmoo_webui_dir(_) -> true;
   prolog_load_context(directory,Dir),asserta(lmconfig:logicmoo_webui_dir(Dir)).
 
-:- listing(lmconfig:logicmoo_webui_dir/1).
+%:- listing(lmconfig:logicmoo_webui_dir/1).
 
 attach_packs_relative_web_dir(Rel):-
    once(((
     lmconfig:logicmoo_webui_dir(Dir),
     (absolute_file_name(Rel,PackDir,[relative_to(Dir),file_type(directory),file_errors(fail)]);
       absolute_file_name(Rel,PackDir,[file_type(directory),file_errors(fail)])),
-    writeln(attach_packs(PackDir)),attach_packs(PackDir)));writeln(failed(attach_packs_relative_web_dir(Rel)))).
+    nop(writeln(attach_packs(PackDir))),attach_packs(PackDir)));nop(writeln(failed(attach_packs_relative_web_dir(Rel))))).
 
+load_web_package_dirs:-
+  in_lm_ws(load_web_package_dirs0).
 
+load_web_package_dirs0:- 
+  findall(PackDir,'$pack':pack(_, PackDir),Before),  
 
-load_web_package_dirs:- 
-
-  findall(PackDir,'$pack':pack(Pack, PackDir),Before),  
-
-   ignore(catch(make_directory('/tmp/tempDir/pack'),_,true)),
-   (user:file_search_path(pack,'/tmp/tempDir/pack') -> true ; asserta(user:file_search_path(pack,'/tmp/tempDir/pack'))),
-   attach_packs('/tmp/tempDir/pack'),
-    pack_install(trill,[upgrade(true),interactive(false)]),    
-    pack_install(cplint_r,[upgrade(true),interactive(false)]),
-    pack_install(rocksdb,[upgrade(true),interactive(false)]),
-    pack_install(bddem,[upgrade(true),interactive(false)]),    
-    pack_install(sldnfdraw,[upgrade(true),interactive(false)]),
-    pack_install(phil,[upgrade(true),interactive(false)]),!,
-
-  ignore(( \+ exists_source(library(logicmoo_common)), attach_packs_relative_web_dir('../../logicmoo_utils/../'))),
-  ignore(( \+ exists_source(library(sldnfdraw)), attach_packs_relative_web_dir('../../packs_lib/'))),
-  ignore(( \+ exists_source(library(lps_corner)), attach_packs_relative_web_dir('../..'))),
-  ignore(( \+ exists_source(library(rserve_client)), attach_packs_relative_web_dir('../packs_web/swish/pack/'))),
-  % ignore(( \+ exists_source(library(rserve_client)), attach_packs_relative_web_dir('../swish/pack/'))),
-  % ignore(( \+ exists_source(pack(plweb/pack_info)), attach_packs('/opt/logicmoo_workspace/packs_web'))),
-  findall(PackDir,'$pack':pack(Pack, PackDir),After),
-  (Before\==After -> (writeln(load_package_dirs(After)),pack_list_installed) ; true),
+   %ignore(catch(make_directory('/tmp/tempDir/pack'),_,true)),
+   %(user:file_search_path(pack,'/tmp/tempDir/pack') -> true ; asserta(user:file_search_path(pack,'/tmp/tempDir/pack'))),
+   %attach_packs('/tmp/tempDir/pack'),
+   % pack_install(trill,[upgrade(true),interactive(false)]),    
+   % pack_install(cplint_r,[upgrade(true),interactive(false)]),
+   % pack_install(rocksdb,[upgrade(true),interactive(false)]),
+   % pack_install(bddem,[upgrade(true),interactive(false)]),    
+   % pack_install(sldnfdraw,[upgrade(true),interactive(false)]),
+   % pack_install(phil,[upgrade(true),interactive(false)]),
+   !,
+   ignore(( \+ exists_source(library(logicmoo_common)), attach_packs_relative_web_dir('../../logicmoo_utils/../'))),
+   ignore(( \+ exists_source(library(sldnfdraw)), attach_packs_relative_web_dir('../../packs_lib/'))),
+   ignore(( \+ exists_source(library(lps_corner)), attach_packs_relative_web_dir('../..'))),
+   ignore(( \+ exists_source(library(bddem)), attach_packs_relative_web_dir('../packs_web/swish/pack/'))),
+   % ignore(( \+ exists_source(library(rserve_client)), attach_packs_relative_web_dir('../packs_web/swish/pack/'))),
+   % ignore(( \+ exists_source(library(rserve_client)), attach_packs_relative_web_dir('../swish/pack/'))),
+   % ignore(( \+ exists_source(pack(plweb/pack_info)), attach_packs('/opt/logicmoo_workspace/packs_web'))),
+  findall(PackDir,'$pack':pack(_, PackDir),After),
+  (Before\==After -> (nop(writeln(load_package_dirs(After))),nop(pack_list_installed)) ; true),
   !.
-
 
   
 :- initialization(load_web_package_dirs, now).
@@ -75,6 +95,7 @@ load_web_package_dirs:-
 :- use_module(library(sandbox)).
 :- use_module(library(pengines_sandbox)).
 % :- rtrace.
+
 :- system:use_module(library(console_input)).
 :- system:use_module(library(date)).
 :- system:use_module(library(make)).
@@ -85,7 +106,7 @@ load_web_package_dirs:-
 :- system:use_module(library(edit)).
 :- system:use_module(library(prolog_trace)).
 :- system:use_module(library(threadutil)).
-:- system:use_module(library(yall)).
+% :- system:use_module(library(yall)).
 :- system:use_module(library(time)).
 :- abolish(system:time/1).
 :- system:use_module(library(statistics)).
@@ -159,7 +180,6 @@ load_web_package_dirs:-
 :- system:use_module(library(when)).
 :- system:use_module(library(writef)).
 :- system:use_module(library(zlib)).
-
 %:- system:use_module(library(jpl)).
 %:- use_module(library(wfs)).
 :- system:use_module(library(wfs),[call_residual_program/2,call_delays/2,delays_residual_program/2,answer_residual/2]).
@@ -167,7 +187,8 @@ load_web_package_dirs:-
 %:- system:use_module(library(swi_compatibility)). %% autoloading swi_ide:auto_call/1 from /usr/lib/swipl/xpce/prolog/lib/swi_compatibility
 :- endif.
 
-sandbox:safe_primitive(dumpst:dumpST()).
+
+sandbox:safe_primitive(dumpst:dumpST).
 sandbox:safe_meta_predicate(system:notrace/1).
 
 :- if(\+ prolog_load_context(reloading,true)).
@@ -175,24 +196,48 @@ sandbox:safe_meta_predicate(system:notrace/1).
 :- use_module(library(pengines_sandbox)).
 :- endif.
 
-webui_load_swish_and_clio:-
-   lmconfig:logicmoo_webui_dir(Dir),
-   % trace,
-   absolute_file_name('../packs_web/swish/run_swish_and_clio',Run,[relative_to(Dir),file_type(prolog),file_errors(fail)]),
-   user:ensure_loaded(Run),
-   swish_app:load_config('./config-enabled-swish'),
-   listing(swish_config:login_item/2),!.
+:- use_module(library(logicmoo_web_long_message)).
+:- set_long_message_server('https://logicmoo.org').
+:- use_module(library('../../shrdlu/prolog/logicmoo_shrdlu')).
+
+inoxf(Goal):- in_lm_ws(ignore(notrace(catch(Goal,E,format(user_error,'~N~ncall(~q) caused: ~q!~n~n',[Goal,E]))))).
+%inoxf(Goal):- catch(Goal),!.
+
+:- dynamic(already_webui_load_swish_and_clio/0).
 
 
-webui_start_swish_and_clio:- 
+skipping(_):-!.
+skipping(X):- dmsg:once_in_while(dmsg(skipping(X))).
+
+webui_load_swish_and_clio:- already_webui_load_swish_and_clio,!.
+webui_load_swish_and_clio:- in_lm_ws(webui_load_swish_and_clio0).
+
+webui_load_swish_and_clio0:-    
+   asserta(already_webui_load_swish_and_clio),
+  maplist(inoxf,[
+  lmconfig:logicmoo_webui_dir(Dir),
+  % trace,
+  \+ \+ (absolute_file_name('../../swish/run_swish_and_clio',Run,[relative_to(Dir),file_type(prolog),file_errors(fail)]),
+  user:ensure_loaded(Run)),
+  
+  asserta((prolog_version:git_update_versions(V):- skipping(prolog_version:git_update_versions(V)),!)),
+  asserta((swish_version:git_update_versions(V):- skipping(swish_version:git_update_versions(V)),!)),
+  swish_app:load_config('./config-enabled-swish'),
+  %\+ \+ (absolute_file_name('../../swish/remote_ide',Run,[relative_to(Dir),file_type(prolog),file_errors(fail)]),
+  %user:ensure_loaded(Run)),!,
+  listing(swish_config:login_item/2)]),!.
+% serve_files_in_directory
+
+webui_start_swish_and_clio:- in_lm_ws(webui_start_swish_and_clio_0).
+webui_start_swish_and_clio_0:- 
+   maplist(inoxf,[
    webui_load_swish_and_clio,
+   set_long_message_server('https://logicmoo.org'),
    broadcast:broadcast(http(pre_server_start)),
-   cp_server:cp_server([]),
+   cp_server:cp_server([]),      
    broadcast:broadcast(http(post_server_start)),
-   swish:start_swish_stat_collector,!.
+   swish:start_swish_stat_collector]),!.
 
-
-
-:- initialization(webui_start_swish_and_clio,restore).
-:- initialization(webui_start_swish_and_clio,program).
+%:- initialization(webui_start_swish_and_clio,restore).
+%:- initialization(webui_start_swish_and_clio,program).
 
