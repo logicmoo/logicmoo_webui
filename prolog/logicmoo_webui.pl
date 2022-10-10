@@ -8,6 +8,8 @@ This module starts and defines the web UI for LOGICMOO.
 @author Douglas R. Miles
 @license LGPL
 */
+:- set_module(class(library)).
+:- set_module(base(system)).
 
 :- discontiguous(lemur:'$exported_op'/3).
 :- discontiguous(phil:'$exported_op'/3).
@@ -188,8 +190,8 @@ load_web_package_dirs0:-
 :- endif.
 
 
-sandbox:safe_primitive(dumpst:dumpST).
 sandbox:safe_meta_predicate(system:notrace/1).
+sandbox:safe_meta_predicate(system:call/1).
 
 :- if(\+ prolog_load_context(reloading,true)).
 :- use_module(library(sandbox)).
@@ -198,7 +200,10 @@ sandbox:safe_meta_predicate(system:notrace/1).
 
 :- use_module(library(logicmoo_web_long_message)).
 :- set_long_message_server('https://logicmoo.org').
+
+:- if(exists_source(library('../../shrdlu/prolog/logicmoo_shrdlu'))).
 :- use_module(library('../../shrdlu/prolog/logicmoo_shrdlu')).
+:- endif.
 
 inoxf(Goal):- in_lm_ws(ignore(notrace(catch(Goal,E,format(user_error,'~N~ncall(~q) caused: ~q!~n~n',[Goal,E]))))).
 %inoxf(Goal):- catch(Goal),!.
@@ -219,7 +224,7 @@ webui_load_swish_and_clio0:-
   % trace,
   \+ \+ (absolute_file_name('../../swish/run_swish_and_clio',Run,[relative_to(Dir),file_type(prolog),file_errors(fail)]),
   user:ensure_loaded(Run)),
-  
+  set_prolog_flag(no_sandbox,true),
   asserta((prolog_version:git_update_versions(V):- skipping(prolog_version:git_update_versions(V)),!)),
   asserta((swish_version:git_update_versions(V):- skipping(swish_version:git_update_versions(V)),!)),
   swish_app:load_config('./config-enabled-swish'),
